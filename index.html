@@ -21,10 +21,18 @@ p {
   position: sticky;
   top: 0;
 }
+.subtle {
+  color: #ccc;
+}
 .logentry {
-  border-bottom: 1px solid #eee;
   padding: 0;
   width: 880px;
+}
+.logentry:nth-child(even) {
+  background: #ffffff;
+}
+.logentry:nth-child(odd) {
+  background: #f7f7f7;
 }
 .timestamp {
   display: inline-block;
@@ -32,13 +40,18 @@ p {
   width: 180px;
   vertical-align: top;
   font-family: monospace;
+  text-align: right;
+  margin: 0.1em;
 }
 .author {
   display: inline-block;
   vertical-align: top;
   overflow-wrap: break-word;
+  text-align: right;
   margin: 0;
   width: 150px;
+  margin: 0.1em;
+    font-weight: bold;
 }
 .msg {
   display: inline-block;
@@ -50,6 +63,8 @@ p {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown.js/0.5.0/markdown.min.js"></script>
 
 <script>
+"use strict";
+
 function pad2(num) {
   let sign = num >= 0 ? '' : '-';
   let s = Math.abs(Math.floor(num)).toString();
@@ -91,7 +106,8 @@ function getParentLogEntry(el) {
 function logEntrySelector(ev) {
   const sel = window.getSelection();
   const r = sel.getRangeAt(0);
-  if (r.startContainer == r.endContainer && r.startOffset == r.endOffset) {
+  if (r.startContainer == r.endContainer) {
+    // Either there's no selection or just part of one message.
     return;
   }
   // The user has selected something.
@@ -111,6 +127,16 @@ function logEntrySelector(ev) {
   sel.setBaseAndExtent(startContainer, startOffset, endContainer, endOffset);
 }
 
+function mkSubtleHTML(left, inner, right) {
+  let s = inner;
+  if (left) {
+    s = `<span class=subtle>${left}</span>` + s;
+  }
+  if (right) {
+    s = s + `<span class=subtle>${right}</span>`;
+  }
+  return s;
+}
 function mkChatMsg(msg) {
   const logentry = document.createElement('div');
   logentry.classList.add('logentry');
@@ -120,13 +146,13 @@ function mkChatMsg(msg) {
   logentry.appendChild(timestamp);
   timestamp.classList.add('timestamp');
   timestamp.title = msg.timestamp;
-  timestamp.innerText = mkTimestamp(msg.timestamp);
+  timestamp.innerHTML = mkSubtleHTML("[", mkTimestamp(msg.timestamp), "] ");
 
   const author = document.createElement('div');
   logentry.appendChild(author);
   author.classList.add('author');
   author.title = msg.author.id;
-  author.innerText = msg.author.username;
+  author.innerHTML = mkSubtleHTML("", msg.author.username, ":");
 
   const text = document.createElement('div');
   logentry.appendChild(text);
