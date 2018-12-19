@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+<title>Logs Viewer</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  font-size: 11pt;
+}
+p {
+  margin: 0.1em;
+}
+.filename {
+  font-family: monospace;
+  font-weight: bold;
+  width: 100%;
+  border-style: solid;
+  border-width: 1px 0px;
+}
+.logentry {
+  border-bottom: 1px solid #eee;
+  padding: 0;
+  width: 850px;
+}
+.timestamp {
+  display: inline-block;
+  margin: 0;
+  width: 160px;
+  vertical-align: top;
+  font-family: monospace;
+}
+.author {
+  display: inline-block;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  margin: 0;
+  width: 150px;
+}
+.msg {
+  display: inline-block;
+  margin: 0;
+  width: 530px;
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown.js/0.5.0/markdown.min.js"></script>
+
+<script>
+function pad2(num) {
+  let sign = num >= 0 ? '' : '-';
+  let s = Math.abs(Math.floor(num)).toString();
+  if (s.length == 1) s = '0' + s;
+  return sign + s;
+}
+
+function timezone() {
+  const tzoffset = -(new Date().getTimezoneOffset());
+  let tz = pad2(Math.floor(tzoffset / 60));
+  if (tzoffset % 60) {
+    tz += ':' + pad2(tzoffset % 60);
+  }
+  if (tzoffset > 0) {
+    tz = '+' + tz;
+  }
+  return tz;
+}
+const tz = timezone();
+
+function mkTimestamp(timestamp) {
+  const d = new Date(timestamp);
+  return d.getFullYear() + '-' +
+    pad2(d.getMonth()) + '-' +
+    pad2(d.getDay()) + ' ' +
+    pad2(d.getHours()) + ':' +
+    pad2(d.getMinutes()) + tz;
+}
+
+function mkChatMsg(msg) {
+  const logentry = document.createElement('div');
+  logentry.classList.add('logentry');
+  logentry.title = msg.id;
+
+  const timestamp = document.createElement('div');
+  logentry.appendChild(timestamp);
+  timestamp.classList.add('timestamp');
+  timestamp.title = msg.timestamp;
+  timestamp.innerText = mkTimestamp(msg.timestamp);
+
+  const author = document.createElement('div');
+  logentry.appendChild(author);
+  author.classList.add('author');
+  author.title = msg.author.id;
+  author.innerText = msg.author.username;
+
+  const text = document.createElement('div');
+  logentry.appendChild(text);
+  text.classList.add('msg');
+  text.innerHTML = markdown.toHTML(msg.msg.replace('#', '\\#'));
+
+  return logentry;
+}
+</script>
+
+</head>
+<body>
+
+<div id="target">
+  Drop one or more log <code>.json</code> files into this window to view.
+</div>
+
+<script>
+const target = document.getElementById('target');
+
+function clearChatLogs() {
+  target.innerHTML = ''; // TODO use faster implementation
+}
+function appendChatMsgs(filename, result) {
+  const fn = document.createElement('div');
+  target.appendChild(fn);
+  fn.classList.add('filename');
+  fn.innerText = filename;
+
+  result = result.substring(1, result.length - 1).trim();
+  const msgs = result.split('\n');
+  for (const msg of msgs) {
+    appendChatMsg(JSON.parse(msg));
+  }
+}
+function appendChatMsg(msg) {
+  target.appendChild(mkChatMsg(msg));
+}
+
+document.ondragover = ev => {
+  ev.preventDefault();
+}
+
+document.ondrop = ev => {
+  ev.preventDefault();
+
+  clearChatLogs();
+  const promises = [];
+  for (const file of ev.dataTransfer.files) {
+    const reader = new FileReader();
+    const p = new Promise(resolve => {
+      reader.onload = f => {
+        const result = f.target.result;
+        resolve({file, result});
+      };
+      reader.readAsText(file);
+    });
+    promises.push(p);
+  }
+  Promise.all(promises).then(files => {
+    console.log(files);
+    files.sort((a, b) => a.file.name < b.file.name ? -1 :
+                         a.file.name > b.file.name ? 1 : 0);
+    for (const {file, result} of files) {
+      appendChatMsgs(file.name, result);
+    }
+  });
+}
+</script>
+
+</body>
+</html>
