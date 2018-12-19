@@ -24,12 +24,12 @@ p {
 .logentry {
   border-bottom: 1px solid #eee;
   padding: 0;
-  width: 850px;
+  width: 880px;
 }
 .timestamp {
   display: inline-block;
   margin: 0;
-  width: 160px;
+  width: 180px;
   vertical-align: top;
   font-family: monospace;
 }
@@ -77,6 +77,38 @@ function mkTimestamp(timestamp) {
     pad2(d.getDay()) + ' ' +
     pad2(d.getHours()) + ':' +
     pad2(d.getMinutes()) + tz;
+}
+
+function getParentLogEntry(el) {
+  if (el === document.body) {
+    return null;
+  }
+  if (el.classList && el.classList.contains("logentry")) {
+    return el;
+  }
+  return getParentLogEntry(el.parentElement);
+}
+function logEntrySelector(ev) {
+  const sel = window.getSelection();
+  const r = sel.getRangeAt(0);
+  if (r.startContainer == r.endContainer && r.startOffset == r.endOffset) {
+    return;
+  }
+  // The user has selected something.
+  // Expand their selection to the whole message, so they get timestamp etc.
+  let startContainer = getParentLogEntry(r.startContainer);
+  let startOffset = 0;
+  if (!startContainer) {
+    startContainer = r.startContainer;
+    startOffset = r.startOffset;
+  }
+  let endContainer = getParentLogEntry(r.endContainer);
+  let endOffset = 3; // 3 is the number of elements in a logentry.
+  if (!endContainer) {
+    endContainer = r.endContainer;
+    endOffset = r.endOffset;
+  }
+  sel.setBaseAndExtent(startContainer, startOffset, endContainer, endOffset);
 }
 
 function mkChatMsg(msg) {
@@ -141,6 +173,9 @@ document.ondragover = ev => {
 document.ondrop = ev => {
   ev.preventDefault();
 
+  if (!ev.dataTransfer.files.length) {
+    return;
+  }
   clearChatLogs();
   const promises = [];
   for (const file of ev.dataTransfer.files) {
@@ -155,7 +190,6 @@ document.ondrop = ev => {
     promises.push(p);
   }
   Promise.all(promises).then(files => {
-    console.log(files);
     files.sort((a, b) => a.file.name < b.file.name ? -1 :
                          a.file.name > b.file.name ? 1 : 0);
     for (const {file, result} of files) {
@@ -163,6 +197,8 @@ document.ondrop = ev => {
     }
   });
 }
+
+document.onmouseup = logEntrySelector;
 </script>
 
 </body>
