@@ -72,26 +72,10 @@ function pad2(num) {
   return sign + s;
 }
 
-function timezone() {
-  const tzoffset = -(new Date().getTimezoneOffset());
-  let tz = pad2(Math.floor(tzoffset / 60));
-  if (tzoffset % 60) {
-    tz += ':' + pad2(tzoffset % 60);
-  }
-  if (tzoffset > 0) {
-    tz = '+' + tz;
-  }
-  return tz;
-}
-const tz = timezone();
-
 function mkTimestamp(timestamp) {
   const d = new Date(timestamp);
-  return d.getFullYear() + '-' +
-    pad2(d.getMonth()) + '-' +
-    pad2(d.getDay()) + ' ' +
-    pad2(d.getHours()) + ':' +
-    pad2(d.getMinutes()) + tz;
+  const iso = d.toISOString();
+  return iso.substring(0, 10) + ' ' + iso.substring(11, 16);
 }
 
 function getParentLogEntry(el) {
@@ -174,7 +158,7 @@ function mkChatMsg(msg) {
 const target = document.getElementById('target');
 
 function clearChatLogs() {
-  target.innerHTML = ''; // TODO use faster implementation
+  target.innerHTML = ''; // TODO: slow
 }
 function appendChatMsgs(filename, result) {
   const fn = document.createElement('div');
@@ -182,9 +166,11 @@ function appendChatMsgs(filename, result) {
   fn.classList.add('filename');
   fn.innerText = filename;
 
-  result = result.substring(1, result.length - 1).trim();
   const msgs = result.split('\n');
   for (const msg of msgs) {
+    if (msg.length == 0 || msg == ']' || msg == '[') {
+      continue;
+    }
     appendChatMsg(JSON.parse(msg));
   }
 }
