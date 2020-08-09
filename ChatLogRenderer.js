@@ -108,6 +108,6 @@ export class ChatLogRenderer {
     filenameElem.classList.add('filename');
     filenameElem.innerText = filename;
 
-    this.renderChatLog(this.target, filecontents);
+    renderChatLog(this.target, filecontents);
   }
 }
