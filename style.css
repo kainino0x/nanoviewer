@@ -1,0 +1,54 @@
+body {
+  font-family: sans-serif;
+  font-size: 11pt;
+}
+p {
+  margin: 0.1em;
+}
+.filename {
+  font-family: monospace;
+  font-weight: bold;
+  width: 100%;
+  border-style: solid;
+  border-width: 1px 0px;
+  background: white;
+  position: sticky;
+  top: 0;
+}
+.subtle {
+  color: #ccc;
+}
+.logentry {
+  padding: 0;
+  width: 890px;
+}
+.logentry:nth-child(even) {
+  background: #ffffff;
+}
+.logentry:nth-child(odd) {
+  background: #f7f7f7;
+}
+.timestamp {
+  display: inline-block;
+  margin: 0;
+  width: 190px;
+  vertical-align: top;
+  font-family: monospace;
+  text-align: right;
+  margin: 0.1em;
+}
+.author {
+  display: inline-block;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  text-align: right;
+  margin: 0;
+  width: 150px;
+  margin: 0.1em;
+    font-weight: bold;
+}
+.msg {
+  display: inline-block;
+  margin: 0;
+  width: 530px;
+}

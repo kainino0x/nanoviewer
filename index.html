@@ -3,148 +3,8 @@
 <head>
 <title>NanoViewer</title>
 
-<style>
-body {
-  font-family: sans-serif;
-  font-size: 11pt;
-}
-p {
-  margin: 0.1em;
-}
-.filename {
-  font-family: monospace;
-  font-weight: bold;
-  width: 100%;
-  border-style: solid;
-  border-width: 1px 0px;
-  background: white;
-  position: sticky;
-  top: 0;
-}
-.subtle {
-  color: #ccc;
-}
-.logentry {
-  padding: 0;
-  width: 890px;
-}
-.logentry:nth-child(even) {
-  background: #ffffff;
-}
-.logentry:nth-child(odd) {
-  background: #f7f7f7;
-}
-.timestamp {
-  display: inline-block;
-  margin: 0;
-  width: 190px;
-  vertical-align: top;
-  font-family: monospace;
-  text-align: right;
-  margin: 0.1em;
-}
-.author {
-  display: inline-block;
-  vertical-align: top;
-  overflow-wrap: break-word;
-  text-align: right;
-  margin: 0;
-  width: 150px;
-  margin: 0.1em;
-    font-weight: bold;
-}
-.msg {
-  display: inline-block;
-  margin: 0;
-  width: 530px;
-}
-</style>
-
+<link rel=stylesheet href=style.css>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown.js/0.5.0/markdown.min.js"></script>
-
-<script>
-"use strict";
-
-function pad2(num) {
-  let sign = num >= 0 ? '' : '-';
-  let s = Math.abs(Math.floor(num)).toString();
-  if (s.length == 1) s = '0' + s;
-  return sign + s;
-}
-
-function mkTimestamp(timestamp) {
-  const d = new Date(timestamp);
-  const iso = d.toISOString();
-  return iso.substring(0, 10) + ' ' + iso.substring(11, 16);
-}
-
-function getParentLogEntry(el) {
-  if (el === document.body) {
-    return null;
-  }
-  if (el.classList && el.classList.contains("logentry")) {
-    return el;
-  }
-  return getParentLogEntry(el.parentElement);
-}
-function logEntrySelector(ev) {
-  const sel = window.getSelection();
-  const r = sel.getRangeAt(0);
-  if (r.startContainer == r.endContainer) {
-    // Either there's no selection or just part of one message.
-    return;
-  }
-  // The user has selected something.
-  // Expand their selection to the whole message, so they get timestamp etc.
-  let startContainer = getParentLogEntry(r.startContainer);
-  let startOffset = 0;
-  if (!startContainer) {
-    startContainer = r.startContainer;
-    startOffset = r.startOffset;
-  }
-  let endContainer = getParentLogEntry(r.endContainer);
-  let endOffset = 3; // 3 is the number of elements in a logentry.
-  if (!endContainer) {
-    endContainer = r.endContainer;
-    endOffset = r.endOffset;
-  }
-  sel.setBaseAndExtent(startContainer, startOffset, endContainer, endOffset);
-}
-
-function mkSubtleHTML(left, inner, right) {
-  let s = inner;
-  if (left) {
-    s = `<span class=subtle>${left}</span>` + s;
-  }
-  if (right) {
-    s = s + `<span class=subtle>${right}</span>`;
-  }
-  return s;
-}
-function mkChatMsg(msg) {
-  const logentry = document.createElement('div');
-  logentry.classList.add('logentry');
-  logentry.title = msg.id;
-
-  const timestamp = document.createElement('div');
-  logentry.appendChild(timestamp);
-  timestamp.classList.add('timestamp');
-  timestamp.title = msg.timestamp;
-  timestamp.innerHTML = mkSubtleHTML("[", mkTimestamp(msg.timestamp), "] ");
-
-  const author = document.createElement('div');
-  logentry.appendChild(author);
-  author.classList.add('author');
-  author.title = msg.author.id;
-  author.innerHTML = mkSubtleHTML("", msg.author.username, ":");
-
-  const text = document.createElement('div');
-  logentry.appendChild(text);
-  text.classList.add('msg');
-  text.innerHTML = markdown.toHTML(msg.msg.replace('#', '\\#'));
-
-  return logentry;
-}
 </script>
 
 </head>
@@ -154,29 +14,10 @@ function mkChatMsg(msg) {
   Drop one or more of Nano's <code>.json</code> Discord log files into this window to view.
 </div>
 
-<script>
-const target = document.getElementById('target');
+<script type=module>
+import { ChatLogRenderer } from './ChatLogRenderer.js';
 
-function clearChatLogs() {
-  target.innerHTML = ''; // TODO: slow
-}
-function appendChatMsgs(filename, result) {
-  const fn = document.createElement('div');
-  target.appendChild(fn);
-  fn.classList.add('filename');
-  fn.innerText = filename;
-
-  const msgs = result.split('\n');
-  for (const msg of msgs) {
-    if (msg.length == 0 || msg == ']' || msg == '[') {
-      continue;
-    }
-    appendChatMsg(JSON.parse(msg));
-  }
-}
-function appendChatMsg(msg) {
-  target.appendChild(mkChatMsg(msg));
-}
+const renderer = new ChatLogRenderer(document.getElementById('target'));
 
 document.ondragover = ev => {
   ev.preventDefault();
@@ -188,14 +29,14 @@ document.ondrop = ev => {
   if (!ev.dataTransfer.files.length) {
     return;
   }
-  clearChatLogs();
+  renderer.clear();
   const promises = [];
   for (const file of ev.dataTransfer.files) {
     const reader = new FileReader();
     const p = new Promise(resolve => {
       reader.onload = f => {
-        const result = f.target.result;
-        resolve({file, result});
+        const contents = f.target.result;
+        resolve({file, contents});
       };
       reader.readAsText(file);
     });
@@ -204,13 +45,11 @@ document.ondrop = ev => {
   Promise.all(promises).then(files => {
     files.sort((a, b) => a.file.name < b.file.name ? -1 :
                          a.file.name > b.file.name ? 1 : 0);
-    for (const {file, result} of files) {
-      appendChatMsgs(file.name, result);
+    for (const {file, contents} of files) {
+      renderer.append(file.name, contents);
     }
   });
 }
-
-document.onmouseup = logEntrySelector;
 </script>
 
 </body>
