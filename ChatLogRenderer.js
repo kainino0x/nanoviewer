@@ -81,26 +81,33 @@ function mkChatMsg(msg) {
   return logentry;
 }
 
+export function renderChatLog(container, filecontents) {
+  const msgs = filecontents.split('\n');
+  for (const msg of msgs) {
+    if (msg.length == 0 || msg == ']' || msg == '[') {
+      continue;
+    }
+    container.appendChild(mkChatMsg(JSON.parse(msg)));
+  }
+}
+
+export function initSelectionMagic(target) {
+  target.onmouseup = logEntrySelector;
+}
+
 export class ChatLogRenderer {
   constructor(target) {
     this.target = target;
-    target.onmouseup = logEntrySelector;
   }
   clear() {
-    target.innerHTML = ''; // TODO: slow
+    this.target.innerHTML = ''; // TODO: slow
   }
   append(filename, filecontents) {
     const filenameElem = document.createElement('div');
-    target.appendChild(filenameElem);
+    this.target.appendChild(filenameElem);
     filenameElem.classList.add('filename');
     filenameElem.innerText = filename;
 
-    const msgs = filecontents.split('\n');
-    for (const msg of msgs) {
-      if (msg.length == 0 || msg == ']' || msg == '[') {
-        continue;
-      }
-      target.appendChild(mkChatMsg(JSON.parse(msg)));
-    }
+    this.renderChatLog(this.target, filecontents);
   }
 }
