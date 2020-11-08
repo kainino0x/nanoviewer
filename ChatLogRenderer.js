@@ -1,5 +1,7 @@
 'use strict';
 
+if (!discordMarkdown) throw new Error('Requires discord-markdown');
+
 function pad2(num) {
   let sign = num >= 0 ? '' : '-';
   let s = Math.abs(Math.floor(num)).toString();
@@ -76,7 +78,7 @@ function mkChatMsg(msg) {
   const text = document.createElement('div');
   logentry.appendChild(text);
   text.classList.add('msg');
-  text.innerHTML = markdown.toHTML(msg.msg.replace('#', '\\#'));
+  text.innerHTML = discordMarkdown.toHTML(msg.msg.replace('#', '\\#'));
 
   return logentry;
 }

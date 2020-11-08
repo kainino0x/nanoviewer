@@ -1,3 +1,8 @@
+@font-face {
+  font-family: emoji;
+  src: url(//xem.github.io/emoji/twemoji.ttf);
+}
+
 .filename {
   font-family: monospace;
   font-weight: bold;
@@ -14,7 +19,6 @@
 .logentry {
   padding: 0;
   width: 890px;
-  font-family: sans-serif;
   font-size: 11pt;
 }
 .logentry p {
@@ -43,10 +47,19 @@
   margin: 0;
   width: 150px;
   margin: 0.1em;
-    font-weight: bold;
+  font-weight: bold;
 }
 .msg {
+  font-family: sans-serif, emoji;
   display: inline-block;
   margin: 0;
   width: 530px;
+}
+blockquote {
+  margin-left: 2px;
+  border-left: 2px solid lightgray;
+  padding-left: 6px;
+}
+.d-mention {
+  color: blue;
 }
