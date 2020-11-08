@@ -82,12 +82,9 @@ function mkChatMsg(msg) {
 }
 
 export function renderChatLog(container, filecontents) {
-  const msgs = filecontents.split('\n');
+  const msgs = JSON.parse(filecontents);
   for (const msg of msgs) {
-    if (msg.length == 0 || msg == ']' || msg == '[') {
-      continue;
-    }
-    container.appendChild(mkChatMsg(JSON.parse(msg)));
+    container.appendChild(mkChatMsg(msg));
   }
 }
 
