@@ -55,6 +55,19 @@
   margin: 0;
   width: 530px;
 }
+.attachments {
+  border: 1px solid lightgray;
+  border-radius: 6px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.attachments img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 100px;
+  max-width: 600px;
+}
 blockquote {
   margin-left: 2px;
   border-left: 2px solid lightgray;

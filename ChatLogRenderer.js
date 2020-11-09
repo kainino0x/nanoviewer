@@ -58,35 +58,67 @@ function mkSubtleHTML(left, inner, right) {
   }
   return s;
 }
-function mkChatMsg(msg) {
+function mkChatMsg(basepath, msg) {
   const logentry = document.createElement('div');
   logentry.classList.add('logentry');
-  logentry.title = msg.id;
+  logentry.title = 'message id: ' + msg.id;
 
-  const timestamp = document.createElement('div');
+  const timestamp = document.createElement('span');
   logentry.appendChild(timestamp);
   timestamp.classList.add('timestamp');
   timestamp.title = msg.timestamp;
-  timestamp.innerHTML = mkSubtleHTML('[', mkTimestamp(msg.timestamp), '] ');
+  timestamp.innerHTML = mkSubtleHTML('[', mkTimestamp(msg.timestamp), ']&nbsp;');
 
-  const author = document.createElement('div');
+  const author = document.createElement('span');
   logentry.appendChild(author);
   author.classList.add('author');
-  author.title = msg.author.id;
-  author.innerHTML = mkSubtleHTML('', msg.author.username, ':');
+  author.title = 'author id: ' + msg.author.id;
+  author.innerHTML = mkSubtleHTML('', msg.author.username, ':&nbsp;');
 
-  const text = document.createElement('div');
+  const text = document.createElement('span');
   logentry.appendChild(text);
   text.classList.add('msg');
   text.innerHTML = discordMarkdown.toHTML(msg.msg.replace('#', '\\#'));
 
+  if (msg.attachmentsInText || msg.attachments) {
+    const attachmentsList = document.createElement('ul');
+    attachmentsList.classList.add('attachments');
+    text.appendChild(attachmentsList);
+
+    const allAttachments = [];
+    if (msg.attachmentsInText) allAttachments.push(...msg.attachmentsInText);
+    if (msg.attachments) allAttachments.push(...msg.attachments);
+
+    for (const att of allAttachments) {
+      const url = basepath + '/attachments/' + att.localFilename;
+      const [, snowflake, filename] = att.originalUrl.match(/(\d+)\/([^/]+)$/);
+
+      const li = document.createElement('li');
+      li.title = 'attachment id: ' + snowflake;
+      attachmentsList.appendChild(li);
+
+      const a = document.createElement('a');
+      li.appendChild(a);
+      a.href = url;
+      a.target = '_blank';
+      a.innerText = filename;
+
+      if (/\.(png|jpg)$/.test(att.localFilename)) {
+        const img = document.createElement('img');
+        a.appendChild(img);
+        img.src = url;
+        img.alt = ' ' + att.originalUrl;
+      }
+    }
+  }
+
   return logentry;
 }
 
-export function renderChatLog(container, filecontents) {
+export function renderChatLog(container, basepath, filecontents) {
   const msgs = JSON.parse(filecontents);
   for (const msg of msgs) {
-    container.appendChild(mkChatMsg(msg));
+    container.appendChild(mkChatMsg(basepath, msg));
   }
 }
 
@@ -101,12 +133,12 @@ export class ChatLogRenderer {
   clear() {
     this.target.innerHTML = ''; // TODO: slow
   }
-  append(filename, filecontents) {
+  append(filename, basepath, filecontents) {
     const filenameElem = document.createElement('div');
     this.target.appendChild(filenameElem);
     filenameElem.classList.add('filename');
     filenameElem.innerText = filename;
 
-    renderChatLog(this.target, filecontents);
+    renderChatLog(this.target, basepath, filecontents);
   }
 }
