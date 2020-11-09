@@ -58,7 +58,8 @@ function mkSubtleHTML(left, inner, right) {
   }
   return s;
 }
-function mkChatMsg(basepath, msg) {
+
+function mkChatMsg(serverid, channelid, msg, serverMeta) {
   const logentry = document.createElement('div');
   logentry.classList.add('logentry');
   logentry.title = 'message id: ' + msg.id;
@@ -78,7 +79,26 @@ function mkChatMsg(basepath, msg) {
   const text = document.createElement('span');
   logentry.appendChild(text);
   text.classList.add('msg');
-  text.innerHTML = discordMarkdown.toHTML(msg.msg.replace('#', '\\#'));
+
+  text.innerHTML = discordMarkdown.toHTML(msg.msg.replace('#', '\\#'), {
+    discordCallback: {
+      user: x => {
+        const member = serverMeta.members[x.id];
+        const text = member ? `@!${member.username}` : `&lt;@!${x.id}&gt;`;
+        return `<a target=_blank href="https://discord.com/users/${x.id}" title="@user id: ${x.id}">${text}</a>`;
+      },
+      channel: x => {
+        const channel = serverMeta.textChannels[x.id];
+        const text = channel ? `#${channel.name}` : `&lt;#${x.id}&gt;`;
+        return `<a target=_blank href="https://discord.com/channels/${serverid}/${x.id}" title="#channel id: ${x.id}">${text}</a>`;
+      },
+      role: x => {
+        const role = serverMeta.roles[x.id];
+        const text = role ? `@&${role.name}` : `&lt;@&${x.id}&gt;`;
+        return `<a title="@role id: ${x.id}">${text}</a>`;
+      },
+    },
+  });
 
   if (msg.attachmentsInText || msg.attachments) {
     const attachmentsList = document.createElement('ul');
@@ -90,7 +110,7 @@ function mkChatMsg(basepath, msg) {
     if (msg.attachments) allAttachments.push(...msg.attachments);
 
     for (const att of allAttachments) {
-      const url = basepath + '/attachments/' + att.localFilename;
+      const url = `server=${serverid}/ch=${channelid}/attachments/${att.localFilename}`;
       const [, snowflake, filename] = att.originalUrl.match(/(\d+)\/([^/]+)$/);
 
       const li = document.createElement('li');
@@ -115,10 +135,10 @@ function mkChatMsg(basepath, msg) {
   return logentry;
 }
 
-export function renderChatLog(container, basepath, filecontents) {
+export function renderChatLog(container, serverid, channelid, filecontents, serverMeta) {
   const msgs = JSON.parse(filecontents);
   for (const msg of msgs) {
-    container.appendChild(mkChatMsg(basepath, msg));
+    container.appendChild(mkChatMsg(serverid, channelid, msg, serverMeta));
   }
 }
 
@@ -133,12 +153,12 @@ export class ChatLogRenderer {
   clear() {
     this.target.innerHTML = ''; // TODO: slow
   }
-  append(filename, basepath, filecontents) {
+  append(filename, serverid, channelid, filecontents, serverMeta) {
     const filenameElem = document.createElement('div');
     this.target.appendChild(filenameElem);
     filenameElem.classList.add('filename');
     filenameElem.innerText = filename;
 
-    renderChatLog(this.target, basepath, filecontents);
+    renderChatLog(this.target, serverid, channelid, filecontents, serverMeta);
   }
 }

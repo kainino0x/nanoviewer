@@ -55,6 +55,10 @@
   margin: 0;
   width: 530px;
 }
+.msg .d-emoji {
+  height: 1em;
+  width: auto;
+}
 .attachments {
   border: 1px solid lightgray;
   border-radius: 6px;
@@ -74,5 +78,5 @@ blockquote {
   padding-left: 6px;
 }
 .d-mention {
-  color: blue;
+  border: 1px dotted black;
 }
