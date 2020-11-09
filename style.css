@@ -56,7 +56,8 @@
   width: 530px;
 }
 .msg .d-emoji {
-  height: 1em;
+  height: 14pt;
+  vertical-align: bottom;
   width: auto;
 }
 .attachments {

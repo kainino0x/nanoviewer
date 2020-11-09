@@ -84,7 +84,7 @@ function mkChatMsg(serverid, channelid, msg, serverMeta) {
     discordCallback: {
       user: x => {
         const member = serverMeta.members[x.id];
-        const text = member ? `@!${member.username}` : `&lt;@!${x.id}&gt;`;
+        const text = member ? `@${member.username}` : `&lt;@!${x.id}&gt;`;
         return `<a target=_blank href="https://discord.com/users/${x.id}" title="@user id: ${x.id}">${text}</a>`;
       },
       channel: x => {
@@ -94,7 +94,7 @@ function mkChatMsg(serverid, channelid, msg, serverMeta) {
       },
       role: x => {
         const role = serverMeta.roles[x.id];
-        const text = role ? `@&${role.name}` : `&lt;@&${x.id}&gt;`;
+        const text = role ? `@${role.name}` : `&lt;@&${x.id}&gt;`;
         return `<a title="@role id: ${x.id}">${text}</a>`;
       },
     },
