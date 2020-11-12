@@ -59,7 +59,7 @@ function mkSubtleHTML(left, inner, right) {
   return s;
 }
 
-function mkChatMsg(serverid, channelid, msg, serverMeta) {
+function mkChatMsg(serverid, channelid, msg, serverMeta, basePath) {
   const logentry = document.createElement('div');
   logentry.classList.add('logentry');
   logentry.title = 'message id: ' + msg.id;
@@ -110,7 +110,7 @@ function mkChatMsg(serverid, channelid, msg, serverMeta) {
     if (msg.attachments) allAttachments.push(...msg.attachments);
 
     for (const att of allAttachments) {
-      const url = `server=${serverid}/ch=${channelid}/attachments/${att.localFilename}`;
+      const url = `${basePath}/server=${serverid}/ch=${channelid}/attachments/${att.localFilename}`;
       const [, snowflake, filename] = att.originalUrl.match(/(\d+)\/([^/]+)$/);
 
       const li = document.createElement('li');
@@ -135,10 +135,10 @@ function mkChatMsg(serverid, channelid, msg, serverMeta) {
   return logentry;
 }
 
-export function renderChatLog(container, serverid, channelid, filecontents, serverMeta) {
+export function renderChatLog(container, serverid, channelid, filecontents, serverMeta, basePath) {
   const msgs = JSON.parse(filecontents);
   for (const msg of msgs) {
-    container.appendChild(mkChatMsg(serverid, channelid, msg, serverMeta));
+    container.appendChild(mkChatMsg(serverid, channelid, msg, serverMeta, basePath));
   }
 }
 
