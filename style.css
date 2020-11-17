@@ -13,9 +13,11 @@
   position: sticky;
   top: 0;
 }
+
 .subtle {
   color: #ccc;
 }
+
 .logentry {
   padding: 0;
   width: 890px;
@@ -30,6 +32,7 @@
 .logentry:nth-child(odd) {
   background: #f7f7f7;
 }
+
 .timestamp {
   display: inline-block;
   margin: 0;
@@ -39,6 +42,7 @@
   text-align: right;
   margin: 0.1em;
 }
+
 .author {
   display: inline-block;
   vertical-align: top;
@@ -49,6 +53,7 @@
   margin: 0.1em;
   font-weight: bold;
 }
+
 .msg {
   font-family: sans-serif, emoji;
   display: inline-block;
@@ -60,11 +65,15 @@
   vertical-align: bottom;
   width: auto;
 }
-.attachments {
-  border: 1px solid lightgray;
+
+.attachments, .reactions {
   border-radius: 6px;
   padding-top: 4px;
   padding-bottom: 4px;
+}
+
+.attachments {
+  border: 1px solid lightgray;
 }
 .attachments img {
   display: block;
@@ -73,11 +82,20 @@
   max-height: 100px;
   max-width: 600px;
 }
+
+.reactions {
+  box-shadow: 0 0 4px green;
+}
+.reactionuser {
+  margin: 0 6px;
+}
+
 blockquote {
   margin-left: 2px;
   border-left: 2px solid lightgray;
   padding-left: 6px;
 }
+
 .d-mention {
   border: 1px dotted black;
 }

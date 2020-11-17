@@ -80,13 +80,15 @@ function mkChatMsg(serverid, channelid, msg, serverMeta, basePath) {
   logentry.appendChild(text);
   text.classList.add('msg');
 
+  const renderUser = id => {
+    const member = serverMeta.members[id];
+    const text = member ? `@${member.username}` : `&lt;@!${id}&gt;`;
+    return `<a target=_blank href="https://discord.com/users/${id}" title="@user id: ${id}">${text}</a>`;
+  }
+
   text.innerHTML = discordMarkdown.toHTML(msg.msg.replace('#', '\\#'), {
     discordCallback: {
-      user: x => {
-        const member = serverMeta.members[x.id];
-        const text = member ? `@${member.username}` : `&lt;@!${x.id}&gt;`;
-        return `<a target=_blank href="https://discord.com/users/${x.id}" title="@user id: ${x.id}">${text}</a>`;
-      },
+      user: x => renderUser(x.id),
       channel: x => {
         const channel = serverMeta.textChannels[x.id];
         const text = channel ? `#${channel.name}` : `&lt;#${x.id}&gt;`;
@@ -128,6 +130,41 @@ function mkChatMsg(serverid, channelid, msg, serverMeta, basePath) {
         a.appendChild(img);
         img.src = url;
         img.alt = ' ' + att.originalUrl;
+      }
+    }
+  }
+
+  if (msg.reactions) {
+    const reactionsList = document.createElement('ul');
+    reactionsList.classList.add('reactions');
+    text.appendChild(reactionsList);
+
+    for (const [reaction, { users }] of Object.entries(msg.reactions)) {
+      const li = document.createElement('li');
+      reactionsList.appendChild(li);
+
+      const match = reaction.match(/^<:\w+:(\d+)>$/);
+      let emojiElement;
+      if (match) {
+        const snowflake = match[1];
+        // Custom emoji
+        emojiElement = document.createElement('img');
+        emojiElement.classList.add('d-emoji');
+        emojiElement.alt = reaction;
+        emojiElement.title = reaction;
+        emojiElement.src = `https://cdn.discordapp.com/emojis/${snowflake}`;
+      } else {
+        // Unicode emoji
+        emojiElement = document.createElement('span');
+        emojiElement.innerText = reaction;
+      }
+      li.appendChild(emojiElement);
+
+      for (const id of users) {
+        const userspan = document.createElement('span');
+        userspan.classList.add('reactionuser');
+        userspan.innerHTML = renderUser(id);
+        li.appendChild(userspan);
       }
     }
   }
